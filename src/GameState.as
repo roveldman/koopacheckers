@@ -68,7 +68,7 @@ package
 			text.color = 0x40b031;
 			text.shadow = 0x333333;
 			add(text);
-			activeText = new FlxText(0, FlxG.height - 16, 100, "p");
+			activeText = new FlxText(0, FlxG.height - 14, 100, "p");
 			activeText.shadow = 0x333333;
 			add(activeText);
 		}
