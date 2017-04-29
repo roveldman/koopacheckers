@@ -51,6 +51,8 @@ package
 		
 		private var bullet:FlxSprite;
 		
+		private var winner:String;
+		
 		public function GameState()
 		{
 			bullet = new FlxSprite(-32, 32);
@@ -84,11 +86,31 @@ package
 			
 			add(activeText);
 			add(bullet);
+			winner = null;
 		}
 		
 		public override function update():void
 		{
 			Mouse.show();
+			
+			if (winner != null)
+			{
+				activeText.shadow = 0x333333
+				if (winner == "red")
+				{
+					activeText.text = "koopa wins!"
+					activeText.color = 0xFFFF44;
+				}
+				if (hasWon() == "green")
+				{
+					activeText.text = "mario wins!"
+					activeText.color = 0xFF4444;
+					
+				}
+				super.update();
+				return;
+			}
+			
 			//FlxG.log(timer.timeLeft)
 			if (turn && FlxG.mouse.justReleased())
 			{
@@ -106,7 +128,7 @@ package
 						FlxG.shake(.005, .1);
 						tile.angularVelocity = 800
 						tile.angularDrag = 300;
-						
+						winner = hasWon()
 					}
 				}
 				point.destroy();
@@ -117,7 +139,7 @@ package
 				if (timer.loopsLeft == 0)
 				{
 					timer = new FlxTimer();
-					//koopatime = Math.random() / 2 + .5
+					koopatime = Math.random() / 2 + .5
 					timer.start(koopatime, 1, setRed)
 				}
 			}
@@ -141,7 +163,7 @@ package
 						tile2.angularVelocity = -800
 						tile2.angularDrag = 300;
 						FlxG.log(scoreRowsCols(board));
-						
+						winner = hasWon();
 					}
 				}
 				turn = false;
@@ -153,7 +175,7 @@ package
 			{
 				goBrowser = false;
 				goRed = false;
-				if (Math.random() < .3 || countKeys(board) > .75 * (size * size))
+				if (Math.random() < .4 || countKeys(board) > .75 * (size * size))
 				{
 					if (Math.random() < .5)
 					{
@@ -166,9 +188,11 @@ package
 						bullet.velocity.x = -200
 					}
 					
-					bullet.y = 16 + 32 * Math.ceil(Math.random() * size);
+					// TODO fix this
+					bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
 					FlxG.play(Thwomp);
 					FlxG.shake(.01, .2);
+					
 				}
 				else
 				{
@@ -268,6 +292,64 @@ package
 			}
 			//FlxG.log(bestMove);
 			return bestMove;
+		}
+		
+		private function hasWon():String
+		{
+			for (var y:int = 1; y <= size; y++)
+			{
+				var rowScore:Number = 0;
+				var rowScoreOther:Number = 0;
+				
+				for (var x:int = 1; x <= size; x++)
+				{
+					if (board[x + " " + y] == "green")
+					{
+						rowScore += 1;
+					}
+					if (board[x + " " + y] == "red")
+					{
+						rowScoreOther += 1;
+					}
+				}
+				
+				if (rowScore == size)
+				{
+					return "green";
+				}
+				if (rowScoreOther == size)
+				{
+					return "red";
+				}
+			}
+			
+			for (var a:int = 1; a <= size; a++)
+			{
+				var rowScore2:Number = 0;
+				var rowScoreOther2:Number = 0;
+				
+				for (var b:int = 1; b <= size; b++)
+				{
+					if (board[a + " " + b] == "green")
+					{
+						rowScore2 += 1;
+					}
+					if (board[a + " " + b] == "red")
+					{
+						rowScoreOther2 += 1;
+					}
+				}
+				
+				if (rowScore2 == size)
+				{
+					return "green";
+				}
+				if (rowScoreOther2 == size)
+				{
+					return "red";
+				}
+			}
+			return null;
 		}
 		
 		private function scoreRowsCols(b:Dictionary):Number
