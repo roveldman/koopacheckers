@@ -166,7 +166,7 @@ package
 						bullet.velocity.x = -200
 					}
 					
-					bullet.y = 16 + 32 * Math.ceil(Math.random() * 4);
+					bullet.y = 16 + 32 * Math.ceil(Math.random() * size);
 					FlxG.play(Thwomp);
 					FlxG.shake(.01, .2);
 				}
@@ -292,9 +292,16 @@ package
 					}
 				}
 				
-				
-				allRowsColsScore += Math.pow(rowScore, 2.5);
-				allRowsColsScoreOther += Math.pow(rowScoreOther, 2.5);
+				if (rowScoreOther > 0 && rowScore > 0)
+				{
+					
+				}
+				else
+				{
+					
+					allRowsColsScore += Math.pow(rowScore, 2.5);
+					allRowsColsScoreOther += Math.pow(rowScoreOther, 2.5);
+				}
 			}
 			
 			for (var i:int = 1; i <= size; i++)
@@ -306,18 +313,22 @@ package
 				{
 					if (b[i + " " + j] == "green")
 					{
-						colScoreOther = 0;
 						colScore += 1;
 					}
 					if (b[i + " " + j] == "red")
 					{
-						colScore = 0
 						colScoreOther += 1;
 					}
 				}
 				
-				allRowsColsScore += Math.pow(colScore, 2.5);
-				allRowsColsScoreOther += Math.pow(colScoreOther, 2.5);
+				if (colScore > 0 && colScoreOther > 0)
+				{
+				}
+				else
+				{
+					allRowsColsScore += Math.pow(colScore, 2.5);
+					allRowsColsScoreOther += Math.pow(colScoreOther, 2.5);
+				}
 			}
 			return allRowsColsScore - allRowsColsScoreOther;
 		}
