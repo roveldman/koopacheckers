@@ -1,6 +1,6 @@
 package 
 {
-	import org.flixel.FlxSprite;
+	import org.flixel.*;
 	
 	/**
 	 * ...
@@ -14,6 +14,13 @@ package
 		{
 			super(X, Y, SimpleGraphic);
 			
+		}
+		
+		public override function update():void{
+			super.update();
+			if (angularVelocity == 0 && angle%90!=0){
+				angle = Math.round(angle / 90) * 90
+			}
 		}
 		
 	}

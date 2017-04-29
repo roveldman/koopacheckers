@@ -2,6 +2,7 @@ package
 {
 	import flash.ui.Mouse;
 	import flash.utils.Dictionary;
+	import flash.utils.Timer;
 	import org.flixel.*;
 	
 	/**
@@ -22,6 +23,12 @@ package
 		[Embed(source = "back.png")]
 		public static const Back:Class;
 		
+		[Embed(source = "shell.mp3")]
+		public static const Shell:Class;
+		
+		[Embed(source = "thwomp.mp3")]
+		public static const Thwomp:Class;
+		
 		private var tiles:FlxGroup;
 		
 		private var turn:Boolean;
@@ -38,11 +45,15 @@ package
 		
 		private var timer:FlxTimer;
 		
-		private var koopatime:Number = .5;
-		private var bowsertime:Number = .6;
+		private var koopatime:Number = .8;
+		
+		private var bowsertime:Number = 1;
+		
+		private var bullet:FlxSprite;
 		
 		public function GameState()
 		{
+			bullet = new FlxSprite(-32, 32);
 			timer = new FlxTimer();
 			board = new Dictionary();
 			tiles = new FlxGroup();
@@ -64,44 +75,54 @@ package
 			turn = true;
 			goRed = false;
 			goBrowser = false;
-			var text:FlxText = new FlxText(50, -1, 300, "koopa checkers");
-			text.color = 0x40b031;
+			var text:FlxText = new FlxText(0, -1, FlxG.width, "koopa checkers");
+			text.alignment = "center"
 			text.shadow = 0x333333;
 			add(text);
-			activeText = new FlxText(0, FlxG.height - 14, 100, "p");
-			activeText.shadow = 0x333333;
+			activeText = new FlxText(0, FlxG.height - 14, FlxG.width, "p");
+			activeText.alignment = "center"
+			
 			add(activeText);
+			add(bullet);
 		}
 		
 		public override function update():void
 		{
 			Mouse.show();
+			//FlxG.log(timer.timeLeft)
 			if (turn && FlxG.mouse.justReleased())
 			{
 				var point:FlxSprite = new FlxSprite(FlxG.mouse.x, FlxG.mouse.y);
 				point.makeGraphic(1, 1, 0xFF0000);
 				for each (var tile:Tile in tiles.members)
 				{
-					if (FlxG.overlap(point, tile))
+					if (FlxG.overlap(point, tile) && board[tile.locX + " " + tile.locY] == null)
 					{
 						tile.loadGraphic(Green);
 						turn = false;
+						goRed = false;
 						board[tile.locX + " " + tile.locY] = "green";
+						FlxG.play(Shell);
+						FlxG.shake(.005, .1);
+						tile.angularVelocity = 800
+						tile.angularDrag = 300;
+						
 					}
 				}
 				point.destroy();
 			}
 			
-			if (!turn && !goRed)
+			if (!turn && !goRed && !goBrowser)
 			{
 				if (timer.loopsLeft == 0)
 				{
+					timer = new FlxTimer();
+					//koopatime = Math.random() / 2 + .5
 					timer.start(koopatime, 1, setRed)
-					FlxG.log("red timer started");
 				}
 			}
 			
-			if (goRed && !turn && !goBrowser)
+			if (goRed && !turn && !goBrowser && bullet.velocity.x == 0)
 			{
 				var move:String = greedy(board, 1, "red");
 				var moveX:int = new Number(move.charAt(0));
@@ -115,6 +136,12 @@ package
 					{
 						tile2.loadGraphic(Red);
 						board[tile2.locX + " " + tile2.locY] = "red";
+						FlxG.play(Shell);
+						FlxG.shake(.005, .1);
+						tile2.angularVelocity = -800
+						tile2.angularDrag = 300;
+						FlxG.log(scoreRowsCols(board));
+						
 					}
 				}
 				turn = false;
@@ -124,24 +151,69 @@ package
 			
 			if (goBrowser)
 			{
-				turn = true;
 				goBrowser = false;
+				goRed = false;
+				if (Math.random() < .3 || countKeys(board) > .75 * (size * size))
+				{
+					if (Math.random() < .5)
+					{
+						bullet.x = -16;
+						bullet.velocity.x = 200
+					}
+					else
+					{
+						bullet.x = FlxG.width + 32
+						bullet.velocity.x = -200
+					}
+					
+					bullet.y = 16 + 32 * Math.ceil(Math.random() * 4);
+					FlxG.play(Thwomp);
+					FlxG.shake(.01, .2);
+				}
+				else
+				{
+					turn = true;
+				}
 			}
 			
 			if (timer.loopsLeft == 0)
 			{
-				activeText.text = "me"
+				activeText.color = 0xFF4444;
+				
+				activeText.text = "mario's turn!"
 			}
 			else if (timer.time == koopatime)
 			{
 				if (!turn)
 				{
-					activeText.text = "koopa"
+					activeText.color = 0xFFFF44;
+					activeText.text = "koopa is thinking"
 				}
 			}
-			else if (timer.time == bowsertime)
+			
+			if (bullet.velocity.x != 0)
 			{
-				activeText.text = "bowser"
+				activeText.color = 0x44FF44
+				activeText.text = "get rekt by bowser"
+			}
+			
+			if (bullet.velocity.x != 0 && (bullet.x > FlxG.width + 33 || bullet.x < -33) && !turn)
+			{
+				turn = true;
+				
+				bullet.velocity.x = 0;
+				bullet.x = -100;
+				FlxG.log(scoreRowsCols(board));
+				
+			}
+			
+			for each (var til:Tile in tiles.members)
+			{
+				if (FlxG.overlap(til, bullet))
+				{
+					til.loadGraphic(Gray);
+					delete board[til.locX + " " + til.locY];
+				}
 			}
 			
 			super.update();
@@ -149,7 +221,7 @@ package
 		
 		private function setRed(num:int):void
 		{
-			if (!turn)
+			if (!turn && !goBrowser)
 			{
 				goRed = true;
 			}
@@ -183,19 +255,17 @@ package
 					{
 						
 						newB[x + " " + y] = color;
-						var score = scoreRowsCols(newB);
+						var score:Number = scoreRowsCols(newB);
 						
 						if (score < bestScore)
 						{
 							bestMove = x + "" + y + " ";
 							bestScore = score;
 						}
-							//FlxG.log(score + " " + x + "," + y);
 					}
 					
 				}
 			}
-			
 			//FlxG.log(bestMove);
 			return bestMove;
 		}
@@ -213,17 +283,16 @@ package
 				{
 					if (b[x + " " + y] == "green")
 					{
-						rowScoreOther = 0
 						rowScore += 1;
 					}
 					
 					if (b[x + " " + y] == "red")
 					{
-						rowScore = 0
 						rowScoreOther += 1;
 					}
-					
 				}
+				
+				
 				allRowsColsScore += Math.pow(rowScore, 2.5);
 				allRowsColsScoreOther += Math.pow(rowScoreOther, 2.5);
 			}
@@ -246,12 +315,22 @@ package
 						colScoreOther += 1;
 					}
 				}
+				
 				allRowsColsScore += Math.pow(colScore, 2.5);
 				allRowsColsScoreOther += Math.pow(colScoreOther, 2.5);
 			}
 			return allRowsColsScore - allRowsColsScoreOther;
 		}
-	
+		
+		public function countKeys(dict:Dictionary):int
+		{
+			var n:int = 0;
+			for (var key:* in dict)
+			{
+				n++;
+			}
+			return n;
+		}
 	}
 
 }
