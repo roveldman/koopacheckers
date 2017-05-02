@@ -16,12 +16,13 @@ package
 			super(528 / scale, 528 / scale, GameState, scale);
 			
 			forceDebugger = true;
+			
 			Mouse.show();
 			
 			FlxG.framerate = 60;
 			FlxG.flashFramerate = 60;
 		
-			//useDefaultHotKeys = false;
+			useSoundHotKeys = false;
 		}
 	}
 }
