@@ -144,7 +144,7 @@ package
 				}
 			}
 			
-			if (goRed && !turn && !goBrowser && bullet.velocity.x == 0)
+			if (goRed && !turn && !goBrowser && getBulletSpeed() == 0)
 			{
 				var move:String = greedy(board, 1, "red");
 				var moveX:int = new Number(move.charAt(0));
@@ -175,21 +175,40 @@ package
 			{
 				goBrowser = false;
 				goRed = false;
-				if (Math.random() < .4 || countKeys(board) > .75 * (size * size))
+				if (Math.random() < .3 || countKeys(board) > .75 * (size * size))
 				{
-					if (Math.random() < .5)
+					var rand:Number = Math.random();
+					if (rand < .25)
 					{
 						bullet.x = -16;
 						bullet.velocity.x = 200
+						bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
+						
+					}
+					else if (rand < .5)
+					{
+						
+						bullet.x = FlxG.width + 32
+						bullet.velocity.x = -200
+						bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
+						
+					}
+					else if (rand < .75)
+					{
+						bullet.y = FlxG.height
+						bullet.velocity.y = -200
+						bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
+						FlxG.log("ok")
+						
 					}
 					else
 					{
-						bullet.x = FlxG.width + 32
-						bullet.velocity.x = -200
+						bullet.y = -16
+						bullet.velocity.y = 200
+						bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
+						
 					}
 					
-					// TODO fix this
-					bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
 					FlxG.play(Thwomp);
 					FlxG.shake(.01, .2);
 					
@@ -215,18 +234,20 @@ package
 				}
 			}
 			
-			if (bullet.velocity.x != 0)
+			if (getBulletSpeed() != 0)
 			{
 				activeText.color = 0x44FF44
 				activeText.text = "get rekt by bowser"
 			}
 			
-			if (bullet.velocity.x != 0 && (bullet.x > FlxG.width + 33 || bullet.x < -33) && !turn)
+			if (getBulletSpeed() != 0 && (bullet.x > FlxG.width + 33 || bullet.x < -33 || bullet.y < -33 || bullet.y > FlxG.height+33) && !turn)
 			{
 				turn = true;
 				
 				bullet.velocity.x = 0;
+				bullet.velocity.y = 0;
 				bullet.x = -100;
+				bullet.y = -100
 				FlxG.log(scoreRowsCols(board));
 				
 			}
@@ -423,6 +444,11 @@ package
 				n++;
 			}
 			return n;
+		}
+		
+		public function getBulletSpeed():Number
+		{
+			return Math.sqrt(Math.pow(Math.abs(bullet.velocity.x), 2) + Math.pow(Math.abs(bullet.velocity.y), 2));
 		}
 	}
 
