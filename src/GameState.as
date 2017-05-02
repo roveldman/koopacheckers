@@ -23,6 +23,9 @@ package
 		[Embed(source = "back.png")]
 		public static const Back:Class;
 		
+		[Embed(source = "bullet.png")]
+		public static const Bullet:Class;
+		
 		[Embed(source = "shell.mp3")]
 		public static const Shell:Class;
 		
@@ -85,8 +88,10 @@ package
 			activeText.alignment = "center"
 			
 			add(activeText);
+			bullet.loadGraphic(Bullet);
 			add(bullet);
 			winner = null;
+			add(new FlxButton(-5,-5, "new", FlxG.resetState).makeGraphic(40,16))
 		}
 		
 		public override function update():void
