@@ -13,7 +13,7 @@ package
 		
 		public function Main()
 		{
-			super(528 / scale, 528 / scale, GameState, scale);
+			super(528 / scale, 528 / scale, LogoState, scale);
 			
 			forceDebugger = true;
 			
@@ -23,6 +23,11 @@ package
 			FlxG.flashFramerate = 60;
 		
 			useSoundHotKeys = false;
+			
+			DialogueManager.initDialogue();
+			FlxG.stage.addChild(DialogueManager.backRect);
+			FlxG.stage.addChild(DialogueManager.textView);
+			FlxG.stage.addChild(DialogueManager.profile);
 		}
 	}
 }

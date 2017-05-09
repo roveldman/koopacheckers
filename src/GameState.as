@@ -11,25 +11,25 @@ package
 	 */
 	public class GameState extends FlxState
 	{
-		[Embed(source = "green.png")]
+		[Embed(source = "res/green.png")]
 		public static const Green:Class;
 		
-		[Embed(source = "red.png")]
+		[Embed(source = "res/red.png")]
 		public static const Red:Class;
 		
-		[Embed(source = "gray.png")]
+		[Embed(source = "res/gray.png")]
 		public static const Gray:Class;
 		
-		[Embed(source = "back.png")]
+		[Embed(source = "res/back.png")]
 		public static const Back:Class;
 		
-		[Embed(source = "bullet.png")]
+		[Embed(source = "res/bullet.png")]
 		public static const Bullet:Class;
 		
-		[Embed(source = "shell.mp3")]
+		[Embed(source = "res/shell.mp3")]
 		public static const Shell:Class;
 		
-		[Embed(source = "thwomp.mp3")]
+		[Embed(source = "res/thwomp.mp3")]
 		public static const Thwomp:Class;
 		
 		private var tiles:FlxGroup;
@@ -56,8 +56,17 @@ package
 		
 		private var winner:String;
 		
+		private var lines:Array;
+		
+		private var tutorial:Number;
+		
+		private var newButton:FlxButton;
+		
+		private var moves:int;
+		
 		public function GameState()
 		{
+			moves = 0;
 			bullet = new FlxSprite(-32, 32);
 			timer = new FlxTimer();
 			board = new Dictionary();
@@ -91,13 +100,72 @@ package
 			bullet.loadGraphic(Bullet);
 			add(bullet);
 			winner = null;
-			add(new FlxButton(-5,-5, "new", FlxG.resetState).makeGraphic(40,16))
+			newButton = new FlxButton(-5, -5, "new", FlxG.resetState);
+			newButton.makeGraphic(40, 16)
+			add(newButton)
+			
+			DialogueManager.show();
+			DialogueManager.nextMessage("");
+			lines = new Array();
+			lines.push("Luigi: Hey there, bro!");
+			/*lines.push("Luigi: Trying to make it big in koopa checkers I see?");
+			lines.push("Luigi: Well, it's tough out here in the big leagues.");
+			lines.push("Bowser Jr: I'll squash you.");
+			lines.push("Luigi: Don't mind him.");
+			lines.push("Bowser Jr: Blah watch out, overalls.");
+			lines.push("Luigi: ... Wah-oo, kids these days sure crack me up.");
+			lines.push("Luigi: So, the object of the game is to get five koopa shells in a row.");
+			lines.push("Luigi: NOOO diagonals.");*/
+			lines.push("Luigi: Just pick a koopa shell, any shell.");
+			lines.push("end");
+			
+			refreshDialogue();
+			
+			tutorial = 0;
 		}
 		
 		public override function update():void
 		{
+			if (tutorial != -1)
+			{
+				newButton.label.alpha = 0
+				newButton.alpha = 0
+				newButton.active = false
+			}
+			else
+			{
+				newButton.label.alpha = 1
+				newButton.alpha = 1
+				newButton.active = true
+			}
 			Mouse.show();
 			
+			if (tutorial == 6 && getBulletSpeed() == 0){
+				tutorial = 7;
+				lines.push("Luigi: Oh, boy. Guess you got to put up with that now.");
+				lines.push("end");
+				DialogueManager.show();
+				refreshDialogue();
+			}
+			
+			if (DialogueManager.profile.alpha != 0)
+			{
+				activeText.alpha = 0;
+				super.update();
+				if (FlxG.mouse.justReleased())
+				{
+					if (DialogueManager.isComplete())
+					{
+						refreshDialogue();
+					}
+					else
+					{
+						DialogueManager.finishText();
+					}
+				}
+				return;
+			}
+			activeText.alpha = 1;
 			if (winner != null)
 			{
 				activeText.shadow = 0x333333
@@ -116,6 +184,29 @@ package
 				return;
 			}
 			
+			
+			if (moves > 7 && tutorial == 3)
+			{
+				tutorial = 5
+				lines.push("Bowser Jr: Blahahahh. Time to turn up the heat, plumber!");
+				lines.push("Bowser Jr: DAAAAAAAAAAAAADDDYYYY!");
+				lines.push("Dad Bowser: Sup hotshot. ");
+				lines.push("Bowser Jr: You're not in the frame.");
+				lines.push("Eye Bowser: How's this?");
+				lines.push("Bowser Jr: Better. Hey, Luigi's not letting me win and its NOT fair.");
+				lines.push("Dad Bowser: What???");
+				lines.push("Luigi: It's only been 8 turns, it's not even POSSIBLE for someone to have won yet!");
+				lines.push("Dad Bowser: Are these runts giving you trouble? You know how ANGRY I get about my kid losing at match-3 clones.");
+				lines.push("Bowser Jr: They're not letting me win!");
+				lines.push("Luigi: N-n-n-o. (Mario, you might want to lose on purpose)");
+				lines.push("Dad Bowser: No need for that!");
+				
+				lines.push("end");
+				DialogueManager.show();
+				refreshDialogue();
+				return;
+			}
+			
 			//FlxG.log(timer.timeLeft)
 			if (turn && FlxG.mouse.justReleased())
 			{
@@ -131,9 +222,15 @@ package
 						board[tile.locX + " " + tile.locY] = "green";
 						FlxG.play(Shell);
 						FlxG.shake(.005, .1);
+						moves++;
+						FlxG.log(moves);
 						tile.angularVelocity = 800
 						tile.angularDrag = 300;
 						winner = hasWon()
+						if (tutorial == 0)
+						{
+							tutorial = 1;
+						}
 					}
 				}
 				point.destroy();
@@ -167,6 +264,7 @@ package
 						FlxG.shake(.005, .1);
 						tile2.angularVelocity = -800
 						tile2.angularDrag = 300;
+						moves++;
 						FlxG.log(scoreRowsCols(board));
 						winner = hasWon();
 					}
@@ -180,42 +278,26 @@ package
 			{
 				goBrowser = false;
 				goRed = false;
-				if (Math.random() < .3 || countKeys(board) > .75 * (size * size))
+				
+				if (tutorial == 2)
 				{
-					var rand:Number = Math.random();
-					if (rand < .25)
-					{
-						bullet.x = -16;
-						bullet.velocity.x = 200
-						bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
-						
-					}
-					else if (rand < .5)
-					{
-						
-						bullet.x = FlxG.width + 32
-						bullet.velocity.x = -200
-						bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
-						
-					}
-					else if (rand < .75)
-					{
-						bullet.y = FlxG.height
-						bullet.velocity.y = -200
-						bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
-						FlxG.log("ok")
-						
-					}
-					else
-					{
-						bullet.y = -16
-						bullet.velocity.y = 200
-						bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
-						
-					}
-					
-					FlxG.play(Thwomp);
-					FlxG.shake(.01, .2);
+					tutorial = 3;
+					lines.push("Luigi: All of Tiny's will be red.");
+					lines.push("Bowser Jr: Wahaha. Don't call me that.");
+					lines.push("Luigi: Hey, at least they don't call you \"Green Mario\".");
+					lines.push("Luigi: Your turn, Mario.");
+					lines.push("end");
+					DialogueManager.show();
+					refreshDialogue();
+				}
+				
+				if (tutorial == 5){
+					doBowser();
+					tutorial = 6;
+				}
+				if ((Math.random() < .3 || countKeys(board) > .75 * (size * size)) && tutorial==-1)
+				{
+					doBowser();
 					
 				}
 				else
@@ -235,8 +317,13 @@ package
 				if (!turn)
 				{
 					activeText.color = 0xFFFF44;
-					activeText.text = "koopa is thinking"
+					activeText.text = "bowser jr. is thinking"
+					for (var i:int = 0; i < 3 - Math.round(timer.timeLeft / timer.time * 3); i++)
+					{
+						activeText.text = activeText.text + "."
+					}
 				}
+				
 			}
 			
 			if (getBulletSpeed() != 0)
@@ -245,7 +332,7 @@ package
 				activeText.text = "get rekt by bowser"
 			}
 			
-			if (getBulletSpeed() != 0 && (bullet.x > FlxG.width + 33 || bullet.x < -33 || bullet.y < -33 || bullet.y > FlxG.height+33) && !turn)
+			if (getBulletSpeed() != 0 && (bullet.x > FlxG.width + 33 || bullet.x < -33 || bullet.y < -33 || bullet.y > FlxG.height + 33) && !turn)
 			{
 				turn = true;
 				
@@ -271,6 +358,16 @@ package
 		
 		private function setRed(num:int):void
 		{
+			if (tutorial == 1)
+			{
+				tutorial = 2;
+				lines.push("Luigi: Alright! All your koopa shells will be green.");
+				lines.push("Bowser Jr: Mwahahaha. My turn!");
+				lines.push("end");
+				DialogueManager.show()
+				refreshDialogue();
+				return;
+			}
 			if (!turn && !goBrowser)
 			{
 				goRed = true;
@@ -441,6 +538,44 @@ package
 			return allRowsColsScore - allRowsColsScoreOther;
 		}
 		
+		private function doBowser():void 
+		{
+			var rand:Number = Math.random();
+			if (rand < .25)
+			{
+				bullet.x = -16;
+				bullet.velocity.x = 200
+				bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
+				
+			}
+			else if (rand < .5)
+			{
+				
+				bullet.x = FlxG.width + 32
+				bullet.velocity.x = -200
+				bullet.y = 16 + 32 * Math.round(Math.random() * (size - 1));
+				
+			}
+			else if (rand < .75)
+			{
+				bullet.y = FlxG.height
+				bullet.velocity.y = -200
+				bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
+				FlxG.log("ok")
+				
+			}
+			else
+			{
+				bullet.y = -16
+				bullet.velocity.y = 200
+				bullet.x = 16 + 32 * Math.round(Math.random() * (size - 1));
+				
+			}
+			
+			FlxG.play(Thwomp);
+			FlxG.shake(.01, .2);
+		}
+		
 		public function countKeys(dict:Dictionary):int
 		{
 			var n:int = 0;
@@ -454,6 +589,12 @@ package
 		public function getBulletSpeed():Number
 		{
 			return Math.sqrt(Math.pow(Math.abs(bullet.velocity.x), 2) + Math.pow(Math.abs(bullet.velocity.y), 2));
+		}
+		
+		public function refreshDialogue():void
+		{
+			DialogueManager.nextMessage(lines.shift());
+			FlxG.stage.addChild(DialogueManager.profile);
 		}
 	}
 
