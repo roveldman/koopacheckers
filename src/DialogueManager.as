@@ -30,6 +30,12 @@ package
 		
 		[Embed(source = "res/bowserjr.png")]
 		public static const BowserJr:Class;
+		
+		[Embed(source = "res/bowser.png")]
+		public static const Bowser:Class;
+		
+		[Embed(source = "res/bowsereye.png")]
+		public static const BowserEye:Class;
 				
 		private static var messageArray:Array = new Array();
 		private static var printing:Boolean = false;
@@ -85,8 +91,12 @@ package
 			}
 			if (next.substring(0, 3) == "Lui"){
 				profile = new Luigi();
-			} else if (next.substring(0, 3) == "Bow"){
+			} else if (next.substr(0,9) == "Bowser Jr"){
 				profile = new BowserJr();
+			} else if (next.substr(0,7) == "Bowser:"){
+				profile = new Bowser();
+			}else if (next.substring(0, 8) == "Bowser's"){
+				profile = new BowserEye();
 			} else {
 				profile = new Bitmap(new BitmapData(96, 96, false, 0xFF888888));
 			}

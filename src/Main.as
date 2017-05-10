@@ -13,7 +13,7 @@ package
 		
 		public function Main()
 		{
-			super(528 / scale, 528 / scale, LogoState, scale);
+			super(528 / scale, 528 / scale, GameState, scale);
 			
 			forceDebugger = true;
 			
@@ -24,10 +24,17 @@ package
 		
 			useSoundHotKeys = false;
 			
+			
+			
 			DialogueManager.initDialogue();
 			FlxG.stage.addChild(DialogueManager.backRect);
 			FlxG.stage.addChild(DialogueManager.textView);
 			FlxG.stage.addChild(DialogueManager.profile);
+			
+			/*var save:FlxSave = new FlxSave();
+			save.bind("save");
+			save.data.tutorial = null
+			save.close();*/
 		}
 	}
 }
